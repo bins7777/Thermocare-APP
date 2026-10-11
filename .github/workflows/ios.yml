@@ -1,0 +1,95 @@
+name: iPhone release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'New positive build number (increase after every Apple upload)'
+        required: true
+        default: '4'
+        type: string
+      upload_to_testflight:
+        description: 'Upload to App Store Connect for TestFlight processing'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: thermocare-ios-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Flutter and signing tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch 3.44.6 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+          python3 -m venv "$RUNNER_TEMP/thermocare-signing-tools"
+          "$RUNNER_TEMP/thermocare-signing-tools/bin/pip" install codemagic-cli-tools==0.70.0
+          echo "$RUNNER_TEMP/thermocare-signing-tools/bin" >> "$GITHUB_PATH"
+          xcodebuild -version
+
+      - name: Restore production Firebase client configuration
+        shell: bash
+        env:
+          FIREBASE_IOS_CONFIG_JSON: ${{ secrets.FIREBASE_IOS_CONFIG_JSON }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          raw = os.environ.get('FIREBASE_IOS_CONFIG_JSON', '')
+          if not raw:
+              raise SystemExit('Add the FIREBASE_IOS_CONFIG_JSON repository secret first.')
+          config = json.loads(raw)
+          if not isinstance(config, dict):
+              raise SystemExit('Firebase configuration must be a JSON object.')
+          pathlib.Path('firebase-config.json').write_text(json.dumps(config), encoding='utf-8')
+          PY
+
+      - name: Validate source and prepare the iOS project
+        shell: bash
+        env:
+          IOS_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: bash tools/cloud-ios.sh prepare
+
+      - name: Sign and build the iPhone archive
+        shell: bash
+        env:
+          IOS_BUILD_NUMBER: ${{ inputs.build_number }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          IOS_CERTIFICATE_PRIVATE_KEY: ${{ secrets.IOS_CERTIFICATE_PRIVATE_KEY }}
+        run: bash tools/cloud-ios.sh sign
+
+      - name: Save the signed IPA and debug symbols
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ThermoCare-iPhone-${{ inputs.build_number }}
+          path: |
+            build/ios/ipa/*.ipa
+            build/ios/archive/Runner.xcarchive/dSYMs/**
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload for TestFlight processing
+        if: ${{ inputs.upload_to_testflight }}
+        shell: bash
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: app-store-connect publish --path 'build/ios/ipa/*.ipa' --enable-package-validation

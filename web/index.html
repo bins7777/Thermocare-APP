@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ThermoCare brings your family’s temperature check-ins, reminders and history together.">
+  <meta name="theme-color" content="#191632">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ThermoCare">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>ThermoCare · Family care, together.</title>
+  <style>
+    html,body{margin:0;background:#191632;color:#f0e8ff;font-family:system-ui,sans-serif}
+    #app-loading{min-height:100dvh;display:flex;align-items:center;justify-content:center;text-align:center}
+    .loading-inner{padding:24px;max-width:320px}
+    .brand-icon{width:72px;height:72px;border-radius:20px}
+    h1{font-size:28px;margin:20px 0 8px}p{color:#c5b8e7;line-height:1.5}
+    .loading-dot{margin:24px auto;width:10px;height:10px;border-radius:50%;background:#b5a0ff;animation:breathe 1.5s ease-in-out infinite}
+    button{border:0;background:#6d4ed0;color:white;padding:14px 24px;border-radius:18px;font:inherit;cursor:pointer}
+    @keyframes breathe{50%{opacity:.35;transform:scale(.7)}}
+    @media(prefers-reduced-motion:reduce){.loading-dot{animation:none}}
+  </style>
+</head>
+<body>
+  <div id="app-loading" role="status" aria-live="polite">
+    <div class="loading-inner">
+      <img class="brand-icon" src="icons/Icon-192.png" alt="">
+      <h1>ThermoCare</h1>
+      <p id="loading-message">A little moment of care.</p>
+      <div class="loading-dot" aria-hidden="true"></div>
+      <button id="reload-app" type="button" hidden onclick="location.reload()">Try again</button>
+      <noscript><p>Enable JavaScript to open ThermoCare.</p></noscript>
+    </div>
+  </div>
+  <script>
+    function showStartupHelp(){
+      const message=document.getElementById('loading-message');
+      if(message){message.textContent='ThermoCare is taking longer to open. Check your connection and try again.';document.getElementById('reload-app').hidden=false;}
+    }
+    const startupTimer=setTimeout(showStartupHelp,30000);
+    window.addEventListener('flutter-first-frame',function(){clearTimeout(startupTimer);document.getElementById('app-loading')?.remove();},{once:true});
+  </script>
+  <script src="flutter_bootstrap.js" async onerror="showStartupHelp()"></script>
+</body>
+</html>

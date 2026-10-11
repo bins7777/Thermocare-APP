@@ -1,0 +1,7 @@
+# Family illustration
+
+`family-care.png` was generated with the built-in image generation tool for the ThermoCare interface. It is decorative and does not reflect a reading or medical status.
+
+Final prompt:
+
+> Use case: illustration-story. Asset type: decorative hero illustration for a comforting family temperature-check mobile app named ThermoCare. Create a beautiful warm hand-painted children's storybook illustration of two loving parents gently cuddling their small child at the center, upper-body portrait, all with soft rounded shapes, tan skin, dark brown hair, tiny relaxed closed smiling eyes and rosy cheeks. Mom in soft peach cardigan, dad in dusty sage sweater, child in butter yellow. Affectionate quiet caring embrace, charming and welcoming, professional editorial quality. Wide landscape composition with the family occupying the center 65 percent, some small sage leaves at bottom corners, tiny peach hearts and a small warm yellow sun. Background is a uniform very pale warm cream #FFF9F1 with a subtle peach oval immediately behind the figures. Light watercolor and colored-pencil texture, soft organic edges, muted pastel palette, delicate brown line details, no harsh black. Clean uncluttered artwork, suitable for display at 320px wide and 130px high. Entire family fits comfortably with negative space around all edges. No text, lettering, numbers, logos, phone frames, medical instruments, UI, or watermarks.

@@ -1,0 +1,65 @@
+name: thermocare
+description: "Family temperature check-ins, reminders and shared history."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.2+4
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  http: ^1.6.0
+  intl: ^0.20.3
+  sembast: ^3.8.11
+  sembast_web: ^2.4.6
+  path_provider: ^2.1.6
+  path: ^1.9.1
+  share_plus: 13.1.0
+  cupertino_icons: 1.0.8
+  firebase_core: ^4.15.0
+  firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.0
+  flutter_local_notifications: 20.1.0
+  timezone: 0.10.1
+  flutter_timezone: 5.0.2
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+
+flutter:
+
+  uses-material-design: true
+  assets:
+    - assets/fonts/Nunito-OFL.txt
+    - assets/fonts/OFL.txt
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf
+        - asset: assets/fonts/Nunito.ttf
+          weight: 600
+        - asset: assets/fonts/Nunito.ttf
+          weight: 700
+        - asset: assets/fonts/Nunito.ttf
+          weight: 800
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+        - asset: assets/fonts/Inter.ttf
+          weight: 500
+        - asset: assets/fonts/Inter.ttf
+          weight: 600
+        - asset: assets/fonts/Inter.ttf
+          weight: 700
+        - asset: assets/fonts/Inter.ttf
+          weight: 800
+
+
+
+

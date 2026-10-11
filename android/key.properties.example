@@ -1,0 +1,6 @@
+# Copy to android/key.properties and fill in your private release signing values.
+# Use an absolute path with forward slashes for storeFile.
+storeFile=C:/path/to/thermocare-release.jks
+storePassword=
+keyAlias=thermocare
+keyPassword=

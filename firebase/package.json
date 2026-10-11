@@ -1,0 +1,15 @@
+{
+  "name": "thermocare-firebase",
+  "private": true,
+  "scripts": {
+    "test:live": "node test/live-smoke.mjs",
+    "test:rules": "firebase emulators:exec --project demo-thermocare --only firestore \"node --test test/rules.test.mjs\"",
+    "emulators": "firebase emulators:start --project demo-thermocare --only auth,firestore",
+    "firebase": "firebase"
+  },
+  "devDependencies": {
+    "firebase-tools": "15.33.0",
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0"
+  }
+}

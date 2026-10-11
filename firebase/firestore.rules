@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owns(uid) { return request.auth != null && request.auth.uid == uid; }
+    function text(value, max) { return value is string && value.size() > 0 && value.size() <= max; }
+    match /families/{uid}/members/{memberId} {
+      allow read, delete: if owns(uid);
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasAll(['id', 'name', 'avatar', 'archived'])
+        && request.resource.data.keys().hasOnly(['id', 'name', 'avatar', 'archived'])
+        && request.resource.data.id == memberId && text(memberId, 100)
+        && text(request.resource.data.name, 40)
+        && request.resource.data.avatar is int
+        && request.resource.data.avatar >= 0 && request.resource.data.avatar <= 13
+        && request.resource.data.archived is bool;
+    }
+    match /families/{uid}/readings/{readingId} {
+      function validQuality(data) {
+        return !('quality' in data) || (data.quality is map
+          && data.quality.keys().hasAll(['sampleCount', 'surfaceRange', 'ambientRange', 'windowSeconds', 'prepared', 'method'])
+          && data.quality.keys().hasOnly(['sampleCount', 'surfaceRange', 'ambientRange', 'windowSeconds', 'prepared', 'method'])
+          && data.quality.sampleCount == 3 && data.quality.sampleCount is int
+          && data.quality.surfaceRange is number && data.quality.surfaceRange >= 0 && data.quality.surfaceRange <= 0.300001
+          && data.quality.ambientRange is number && data.quality.ambientRange >= 0 && data.quality.ambientRange <= 1.000001
+          && data.quality.windowSeconds is int && data.quality.windowSeconds >= 3 && data.quality.windowSeconds <= 8
+          && data.quality.prepared == true && data.quality.method == 'stable-v1');
+      }
+      function validNote(data) {
+        return !('note' in data) || (data.note is string && data.note.size() <= 500);
+      }
+      allow read, delete: if owns(uid);
+      allow create: if owns(uid)
+        && request.resource.data.keys().hasAll(['id', 'celsius', 'ambient', 'at', 'deviceId', 'estimatedTime', 'memberId', 'memberName'])
+        && request.resource.data.keys().hasOnly(['id', 'celsius', 'ambient', 'at', 'deviceId', 'estimatedTime', 'memberId', 'memberName', 'note', 'quality'])
+        && validNote(request.resource.data)
+        && validQuality(request.resource.data)
+        && text(request.resource.data.id, 256)
+        && request.resource.data.celsius is number && request.resource.data.celsius >= -70 && request.resource.data.celsius <= 380
+        && request.resource.data.ambient is number && request.resource.data.ambient >= -40 && request.resource.data.ambient <= 125
+        && text(request.resource.data.at, 40)
+        && request.resource.data.at.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T.*Z$')
+        && text(request.resource.data.deviceId, 100)
+        && request.resource.data.estimatedTime is bool
+        && text(request.resource.data.memberId, 100)
+        && text(request.resource.data.memberName, 40)
+        && existsAfter(/databases/$(database)/documents/families/$(uid)/members/$(request.resource.data.memberId));
+      // Notes can change; the original sensor sample and person stay intact.
+      allow update: if owns(uid) && validNote(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['note']);
+    }
+    match /families/{uid}/reminders/{reminderId} {
+      allow read, delete: if owns(uid);
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasAll(['id', 'memberId', 'hour', 'minute', 'weekdays', 'enabled'])
+        && request.resource.data.keys().hasOnly(['id', 'memberId', 'hour', 'minute', 'weekdays', 'enabled'])
+        && request.resource.data.id == reminderId && text(reminderId, 100)
+        && text(request.resource.data.memberId, 100)
+        && request.resource.data.hour is int && request.resource.data.hour >= 0 && request.resource.data.hour <= 23
+        && request.resource.data.minute is int && request.resource.data.minute >= 0 && request.resource.data.minute <= 59
+        && request.resource.data.weekdays is list && request.resource.data.weekdays.size() >= 1
+        && request.resource.data.weekdays.size() <= 7
+        && request.resource.data.weekdays.toSet().size() == request.resource.data.weekdays.size()
+        && request.resource.data.weekdays.toSet().hasOnly([1, 2, 3, 4, 5, 6, 7])
+        && request.resource.data.enabled is bool
+        && existsAfter(/databases/$(database)/documents/families/$(uid)/members/$(request.resource.data.memberId));
+    }
+  }
+}
